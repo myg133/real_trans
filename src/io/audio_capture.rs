@@ -117,7 +117,7 @@ impl AudioCapture {
 
         // 调用回调函数传递音频数据
         if let Some(ref callback) = self.data_callback {
-            callback(audio_data, false); // is_final = false
+            callback(audio_data, true); // is_final = true for simulated input
         }
     }
 }

@@ -2,6 +2,7 @@
 //! 实现用户语言和对方语言之间的双向实时翻译
 
 use std::sync::{Arc, Mutex};
+use tokio::sync::Mutex as AsyncMutex;
 use std::time::Instant;
 use tokio::sync::oneshot;
 use crate::{
@@ -246,6 +247,32 @@ impl BidirectionalTranslator {
             let mut pipeline = self.other_to_user_pipeline.lock().unwrap();
             pipeline.process_audio(audio_data);
         }
+    }
+
+    /// 处理发送端音频（用户说话，翻译成对方语言）
+    pub async fn handle_outbound_audio(&self, audio_data: &[AudioSample]) {
+        // 设置当前方向为用户到对方
+        {
+            let mut dir = self.current_direction.lock().unwrap();
+            *dir = TranslationDirection::UserToOther;
+        }
+
+        // 通过用户到对方的翻译流水线处理音频
+        let mut pipeline = self.user_to_other_pipeline.lock().unwrap();
+        pipeline.process_audio(audio_data);
+    }
+
+    /// 处理接收端音频（对方说话，翻译成用户语言）
+    pub async fn handle_inbound_audio(&self, audio_data: &[AudioSample]) {
+        // 设置当前方向为对方到用户
+        {
+            let mut dir = self.current_direction.lock().unwrap();
+            *dir = TranslationDirection::OtherToUser;
+        }
+
+        // 通过对方到用户的翻译流水线处理音频
+        let mut pipeline = self.other_to_user_pipeline.lock().unwrap();
+        pipeline.process_audio(audio_data);
     }
 
     /// 模拟用户说话
