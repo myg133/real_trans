@@ -151,6 +151,10 @@ cargo run --example full_integration_test
 cargo run --example module_tests_runner
 ```
 
+### 常见问题排查
+
+如果遇到构建或运行问题，请参考 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) 获取解决方案，特别是依赖版本冲突和音频设备访问等问题的处理方法。
+
 ### 模型安装
 
 ```bash
