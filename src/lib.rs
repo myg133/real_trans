@@ -23,3 +23,9 @@ pub mod engine {
     pub mod tts;
     pub mod translation_pipeline;
 }
+
+/// 双向翻译器 - 实现用户语言和对方语言之间的双向实时翻译
+pub mod bidirectional_translator;
+
+/// 虚拟音频设备管理器 - 管理虚拟音频输入和输出设备
+pub mod virtual_audio_manager;
