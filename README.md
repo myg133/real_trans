@@ -119,6 +119,17 @@ cargo run --example conference_translator_demo
 cargo test
 ```
 
+### 音频设备选择
+
+在运行程序前，您需要了解如何选择合适的音频设备：
+
+```bash
+# 查看系统上可用的音频设备
+cargo run --example list_audio_devices
+```
+
+有关如何选择和配置音频设备的详细指南，请参阅 [AUDIO_DEVICE_GUIDE.md](AUDIO_DEVICE_GUIDE.md)。
+
 ### 模块化测试
 
 系统提供了分步测试功能，可按模块验证功能：
