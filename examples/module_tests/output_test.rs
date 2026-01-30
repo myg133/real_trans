@@ -4,7 +4,7 @@
 use std::fs::File;
 use std::io::Read;
 use std::sync::{Arc, Mutex};
-use real_trans::io::audio_device::{AudioDevice, MockAudioDevice, AudioSample};
+use real_trans::io::audio_device::{AudioDevice, VirtualAudioDevice, AudioSample};
 
 struct AudioPlayer {
     audio_device: Option<Box<dyn AudioDevice>>,
@@ -13,7 +13,7 @@ struct AudioPlayer {
 impl AudioPlayer {
     fn new() -> Result<Self, Box<dyn std::error::Error>> {
         Ok(AudioPlayer {
-            audio_device: Some(Box::new(MockAudioDevice::new())),
+            audio_device: Some(Box::new(VirtualAudioDevice::new())),
         })
     }
 

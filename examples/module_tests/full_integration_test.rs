@@ -6,7 +6,7 @@ use std::io::{Read, Write};
 use std::sync::{Arc, Mutex};
 use tokio::time::{sleep, Duration};
 use real_trans::{
-    io::audio_device::{AudioDevice, MockAudioDevice, AudioSample},
+    io::audio_device::{AudioDevice, VirtualAudioDevice, AudioSample},
     bidirectional_translator::{BidirectionalTranslator, BidirectionalResult, TranslationDirection}
 };
 
@@ -79,8 +79,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     translator.start()?;
 
-    // 模拟音频输入设备
-    let mut input_device = MockAudioDevice::new();
+    // 创建虚拟音频设备（在实际实现中，这里会连接到真实的物理设备）
+    let mut input_device = VirtualAudioDevice::new();
     input_device.open_input_stream(
         Some("physical_mic".to_string()),
         Box::new({
@@ -96,8 +96,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     input_device.start_recording()?;
 
-    // 模拟音频输出设备
-    let mut output_device = MockAudioDevice::new();
+    // 创建虚拟音频输出设备
+    let mut output_device = VirtualAudioDevice::new();
     output_device.open_output_stream(Some("physical_headphones".to_string()))?;
 
     println!("开始端到端测试...");

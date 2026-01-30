@@ -6,7 +6,7 @@ use std::io::Write;
 use std::sync::{Arc, Mutex};
 use tokio::time::{sleep, Duration};
 use real_trans::{
-    io::audio_device::{AudioDevice, MockAudioDevice, AudioSample},
+    io::audio_device::{AudioDevice, VirtualAudioDevice, AudioSample},
     engine::translation_pipeline::{TranslationPipeline, TranslationCallback},
     bidirectional_translator::{BidirectionalTranslator, BidirectionalResult, TranslationDirection}
 };
@@ -60,8 +60,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     translator.start()?;
 
-    // 创建模拟音频设备
-    let mut audio_device = MockAudioDevice::new();
+    // 创建虚拟音频设备（在实际实现中，这里会连接到真实的物理麦克风）
+    let mut audio_device = VirtualAudioDevice::new();
     
     // 设置音频输入回调
     let recorder_clone = Arc::clone(&recorder);
