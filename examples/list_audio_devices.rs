@@ -3,73 +3,88 @@
 
 use cpal::traits::{DeviceTrait, HostTrait};
 
+use std::time::Duration;
+use tokio::time::timeout;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let host = cpal::default_host();
-    
-    println!("🔍 搜索可用的音频输入设备...");
-    
-    match host.input_devices() {
-        Ok(mut devices) => {
-            let input_devices: Vec<_> = devices.collect();
-            if input_devices.is_empty() {
-                println!("❌ 未找到任何输入设备");
-            } else {
-                println!("✅ 找到 {} 个输入设备:", input_devices.len());
-                for (i, device) in input_devices.iter().enumerate() {
-                    let device_name = device.name().unwrap_or_else(|_| "Unknown Device".to_string());
-                    let default_mark = if let Some(default_device) = host.default_input_device() {
-                        if default_device.name().unwrap_or_default() == device.name().unwrap_or_default() {
-                            " (默认)"
+    // 使用超时包装以避免在无音频设备的环境中挂起
+    let result = timeout(Duration::from_secs(2), async {
+        let host = cpal::default_host();
+        
+        println!("🔍 搜索可用的音频输入设备...");
+        
+        match host.input_devices() {
+            Ok(mut devices) => {
+                let input_devices: Vec<_> = devices.collect();
+                if input_devices.is_empty() {
+                    println!("❌ 未找到任何输入设备");
+                } else {
+                    println!("✅ 找到 {} 个输入设备:", input_devices.len());
+                    for (i, device) in input_devices.iter().enumerate() {
+                        let device_name = device.name().unwrap_or_else(|_| "Unknown Device".to_string());
+                        let default_mark = if let Some(default_device) = host.default_input_device() {
+                            if default_device.name().unwrap_or_default() == device.name().unwrap_or_default() {
+                                " (默认)"
+                            } else {
+                                ""
+                            }
                         } else {
                             ""
-                        }
-                    } else {
-                        ""
-                    };
-                    println!("  {}. {}{}", 
-                        i + 1, 
-                        device_name,
-                        default_mark
-                    );
+                        };
+                        println!("  {}. {}{}", 
+                            i + 1, 
+                            device_name,
+                            default_mark
+                        );
+                    }
                 }
             }
+            Err(e) => {
+                println!("❌ 获取输入设备失败: {}", e);
+            }
         }
-        Err(e) => {
-            println!("❌ 获取输入设备失败: {}", e);
-        }
-    }
 
-    println!("\n🔍 搜索可用的音频输出设备...");
-    
-    match host.output_devices() {
-        Ok(mut devices) => {
-            let output_devices: Vec<_> = devices.collect();
-            if output_devices.is_empty() {
-                println!("❌ 未找到任何输出设备");
-            } else {
-                println!("✅ 找到 {} 个输出设备:", output_devices.len());
-                for (i, device) in output_devices.iter().enumerate() {
-                    let device_name = device.name().unwrap_or_else(|_| "Unknown Device".to_string());
-                    let default_mark = if let Some(default_device) = host.default_output_device() {
-                        if default_device.name().unwrap_or_default() == device.name().unwrap_or_default() {
-                            " (默认)"
+        println!("\n🔍 搜索可用的音频输出设备...");
+        
+        match host.output_devices() {
+            Ok(mut devices) => {
+                let output_devices: Vec<_> = devices.collect();
+                if output_devices.is_empty() {
+                    println!("❌ 未找到任何输出设备");
+                } else {
+                    println!("✅ 找到 {} 个输出设备:", output_devices.len());
+                    for (i, device) in output_devices.iter().enumerate() {
+                        let device_name = device.name().unwrap_or_else(|_| "Unknown Device".to_string());
+                        let default_mark = if let Some(default_device) = host.default_output_device() {
+                            if default_device.name().unwrap_or_default() == device.name().unwrap_or_default() {
+                                " (默认)"
+                            } else {
+                                ""
+                            }
                         } else {
                             ""
-                        }
-                    } else {
-                        ""
-                    };
-                    println!("  {}. {}{}", 
-                        i + 1, 
-                        device_name,
-                        default_mark
-                    );
+                        };
+                        println!("  {}. {}{}", 
+                            i + 1, 
+                            device_name,
+                            default_mark
+                        );
+                    }
                 }
             }
+            Err(e) => {
+                println!("❌ 获取输出设备失败: {}", e);
+            }
         }
-        Err(e) => {
-            println!("❌ 获取输出设备失败: {}", e);
+
+        Ok::<(), Box<dyn std::error::Error>>(())
+    }).await;
+
+    match result {
+        Ok(_) => {},
+        Err(_) => {
+            println!("⏰ 超时：在规定时间内未能完成设备扫描，可能是因为系统中没有可用的音频设备。");
         }
     }
 
