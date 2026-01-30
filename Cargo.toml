@@ -3,6 +3,19 @@ name = "real_trans"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "simple_test"
+path = "bins/simple_test.rs"
+
+[[bin]]
+name = "integration_test"
+path = "bins/integration_test.rs"
+
+[[bin]]
+name = "test_runner"
+path = "bins/test_runner.rs"
+
+
 [dependencies]
 tokio = { version = "1.20", features = ["full"] }
 serde = { version = "1.0.197", features = ["derive"] }

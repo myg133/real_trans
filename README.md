@@ -19,6 +19,7 @@
   - Model Loader: 模型加载器
 - **Bidirectional Translator**: 双向翻译器 - 实现用户语言和对方语言之间的双向实时翻译
 - **Virtual Audio Manager**: 虚拟音频设备管理器 - 管理虚拟音频输入和输出设备
+- **Tests**: 测试模块 - 包含音频模拟测试框架
 - **UI**: 用户界面（待实现）
 
 ## 功能特性
@@ -37,6 +38,11 @@
 - **低延迟**：端到端延迟小于800ms
 - **流式处理**：支持实时语音流处理
 - **高保真**：保持原始音频质量
+
+### 音频模拟测试
+- **文件驱动测试**：基于文件的音频输入/输出模拟
+- **目录监控**：自动监控和处理音频文件
+- **结果验证**：自动验证翻译结果
 
 ## 依赖库
 
@@ -76,13 +82,19 @@
 # 1. 安装依赖
 cargo build
 
-# 2. 运行集成演示
+# 2. 运行完整演示
+cargo run --bin full_demo
+
+# 3. 运行简单演示
+cargo run --bin simple_demo
+
+# 4. 运行集成演示
 cargo run --bin integration_demo
 
-# 3. 运行会议翻译器演示
+# 5. 运行会议翻译器演示
 cargo run --bin conference_translator_demo
 
-# 4. 运行测试
+# 6. 运行测试
 cargo test
 ```
 
@@ -121,6 +133,53 @@ cargo run
 - 会议中可动态切换语言对
 - 例如：中文↔英语，英语↔法语，等等
 
+## 文件结构
+
+```
+real_trans/
+├── Cargo.toml          # 项目配置文件
+├── Cargo.lock          # 依赖锁定文件
+├── README.md           # 项目说明文档
+├── SUMMARY.md          # 项目总结文档
+├── build.sh            # 构建脚本
+├── download_models.sh  # 下载模型脚本
+├── src/                # 源代码目录
+│   ├── main.rs         # 主入口点
+│   ├── lib.rs          # 库入口点
+│   ├── audio_types.rs  # 音频类型定义
+│   ├── bidirectional_translator.rs  # 双向翻译器
+│   ├── virtual_audio_manager.rs     # 虚拟音频管理器
+│   ├── core/           # 核心组件
+│   │   └── ring_buffer.rs         # 环形缓冲区
+│   ├── engine/         # 引擎组件
+│   │   ├── asr.rs      # ASR引擎
+│   │   ├── mt.rs       # MT引擎
+│   │   ├── vad.rs      # VAD引擎
+│   │   ├── tts.rs      # TTS引擎（预留）
+│   │   ├── model_loader.rs # 模型加载器
+│   │   └── translation_pipeline.rs # 翻译流水线
+│   ├── io/             # I/O组件
+│   │   ├── audio_device.rs  # 音频设备管理
+│   │   ├── audio_capture.rs # 音频捕获
+│   │   └── mod.rs           # I/O模块声明
+│   └── tests/          # 测试模块
+│       ├── audio_simulation.rs         # 音频模拟测试
+│       └── mod.rs                      # 测试模块声明
+├── examples/           # 演示程序
+│   ├── simple_demo.rs               # 简单演示
+│   ├── integration_demo.rs          # 集成演示
+│   ├── full_demo.rs                 # 完整演示
+│   └── conference_translator_demo.rs # 会议翻译演示
+├── bins/               # 测试程序
+│   ├── simple_test.rs               # 简单测试
+│   ├── integration_test.rs          # 集成测试
+│   └── test_runner.rs               # 测试运行器
+├── models/             # 模型目录
+│   ├── whisper-tiny.bin    # Whisper ASR模型
+│   └── qwen2.5-0.5b.bin  # Qwen MT模型
+└── target/             # 编译输出目录（由Cargo管理）
+```
+
 ## 开发状态
 
 - [x] 基础架构搭建
@@ -135,6 +194,8 @@ cargo run
 - [x] 双向翻译器
 - [x] 虚拟音频设备管理器
 - [x] 会议翻译器演示
+- [x] 音频模拟测试框架
+- [x] 完整演示程序
 - [ ] 真实模型集成 (进行中)
 - [ ] 性能优化
 - [ ] UI界面开发
@@ -157,11 +218,17 @@ cargo run
 
 ## 集成演示
 
-运行集成演示以查看所有组件如何协同工作：
+运行不同级别的演示以查看功能：
 
 ```bash
+# 运行简单演示
+cargo run --bin simple_demo
+
 # 运行基础集成演示
 cargo run --bin integration_demo
+
+# 运行完整演示
+cargo run --bin full_demo
 
 # 运行会议翻译器演示
 cargo run --bin conference_translator_demo

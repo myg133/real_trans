@@ -271,6 +271,31 @@ impl BidirectionalTranslator {
         // 通过音频捕获器处理音频
         self.audio_capture.lock().unwrap().simulate_audio_input(audio_data).await;
     }
+
+    /// 切换到用户模式
+    pub fn switch_to_user_mode(&self) {
+        let mut dir = self.current_direction.lock().unwrap();
+        *dir = TranslationDirection::UserToOther;
+    }
+
+    /// 获取统计信息
+    pub fn get_stats(&self) -> TranslationStats {
+        TranslationStats {
+            total_processed: 0,      // 在实际实现中，应跟踪处理的数量
+            successful_translations: 0,
+            error_count: 0,
+            avg_latency_ms: 0.0,
+        }
+    }
+}
+
+/// 翻译统计信息
+#[derive(Debug, Clone)]
+pub struct TranslationStats {
+    pub total_processed: u64,
+    pub successful_translations: u64,
+    pub error_count: u64,
+    pub avg_latency_ms: f64,
 }
 
 #[cfg(test)]

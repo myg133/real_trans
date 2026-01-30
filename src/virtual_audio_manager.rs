@@ -185,6 +185,16 @@ impl VirtualAudioManager {
     }
 }
 
+// 为AppContext添加set_translation_handler方法
+impl AppContext {
+    pub fn set_translation_handler<F>(&mut self, handler: F)
+    where
+        F: Fn(&crate::bidirectional_translator::BidirectionalResult) + Send + Sync + 'static,
+    {
+        self.translator.lock().unwrap().set_result_callback(handler);
+    }
+}
+
 /// 应用程序上下文，整合所有组件
 pub struct AppContext {
     /// 双向翻译器
@@ -279,6 +289,21 @@ impl AppContext {
     /// 获取当前语言对
     pub fn get_current_language_pair(&self) -> crate::bidirectional_translator::LanguagePair {
         self.translator.lock().unwrap().get_current_language_pair()
+    }
+
+    /// 切换到用户模式
+    pub fn switch_to_user_mode(&self) {
+        self.translator.lock().unwrap().switch_to_user_mode();
+    }
+
+    /// 更新语言对
+    pub fn update_language_pair(&mut self, source_lang: &str, target_lang: &str) -> Result<(), Box<dyn std::error::Error>> {
+        self.translator.lock().unwrap().update_language_pair(source_lang, target_lang)
+    }
+
+    /// 获取统计信息
+    pub fn get_statistics(&self) -> crate::bidirectional_translator::TranslationStats {
+        self.translator.lock().unwrap().get_stats()
     }
 }
 

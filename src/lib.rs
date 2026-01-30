@@ -29,3 +29,6 @@ pub mod bidirectional_translator;
 
 /// 虚拟音频设备管理器 - 管理虚拟音频输入和输出设备
 pub mod virtual_audio_manager;
+
+/// 测试模块 - 包含各种测试工具
+pub mod tests;
