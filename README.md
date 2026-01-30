@@ -1,15 +1,15 @@
-# 实时同声翻译应用 (Real-time Speech Translation, RST)
+# Real-time Speech Translation (RST) - 全双工实时双向语音同传系统
 
-一个专注于本地化、低延时、跨平台的实时翻译系统，使用Rust编写。
+一个专注于本地化、低延时、跨平台的全双工实时双向语音同传系统，使用Rust编写。
 
 ## 架构概述
 
-系统采用**生产者-消费者（Producer-Consumer）**模型，通过高性能环形缓冲区处理音频流，确保 UI 线程与推理线程解耦。
+系统采用**全双工音频路由（Full-Duplex Audio Routing）**模型，同时处理发送端和接收端的音频流，确保实时双向翻译。
 
 ### 模块组成
 
 - **Core**: 核心数据结构（环形缓冲区、音频类型定义）
-- **IO**: 音频输入输出（音频设备、音频捕获）
+- **IO**: 音频输入输出（音频设备、音频捕获、虚拟音频设备）
 - **Engine**: 核心引擎
   - ASR: 自动语音识别（使用whisper-rs）
   - MT: 机器翻译（使用llm库）
@@ -18,21 +18,42 @@
   - Translation Pipeline: 翻译流水线协调器
   - Model Loader: 模型加载器
 - **Bidirectional Translator**: 双向翻译器 - 实现用户语言和对方语言之间的双向实时翻译
+- **Audio Switchboard**: 音频交换机 - 管理双通道音频路由（发送端和接收端）
 - **Virtual Audio Manager**: 虚拟音频设备管理器 - 管理虚拟音频输入和输出设备
 - **Tests**: 测试模块 - 包含音频模拟测试框架
 - **UI**: 用户界面（待实现）
 
+## 核心架构
+
+### 双通道流水线设计 (Dual-Channel Workflow)
+
+系统同时运行两个独立的流水线：
+
+#### 发送端（Outbound Pipeline）：
+```
+物理麦克风 -> VAD -> ASR -> MT -> TTS -> 虚拟麦克风 -> 会议软件
+```
+处理你的语音，翻译后注入虚拟麦克风供会议软件使用。
+
+#### 接收端（Inbound Pipeline）：
+```
+会议软件 -> 系统环回 -> VAD -> ASR -> MT -> TTS -> 物理耳机
+```
+捕获会议中的语音，翻译后播放到你的耳机。
+
 ## 功能特性
 
-### 双向实时翻译
-- **用户语言到对方语言**：用户说话时实时翻译成对方语言
-- **对方语言到用户语言**：对方说话时实时翻译成用户语言
+### 全双工实时翻译
+- **发送端处理**：物理麦克风输入 -> 翻译 -> 虚拟麦克风输出
+- **接收端处理**：系统环回输入 -> 翻译 -> 物理耳机输出
+- **双向并发**：支持同时进行双向语音翻译
 - **动态语言切换**：支持会议中动态更改语言对
 
-### 虚拟音频设备
-- **虚拟输入设备**：用于捕获用户语音
-- **虚拟输出设备**：用于播放翻译后的语音
-- **在线会议集成**：可在Zoom、Teams等会议软件中使用
+### 音频路由管理
+- **音频交换机**：集中管理双通道音频路由
+- **虚拟音频设备**：用于会议软件的输入/输出
+- **物理设备管理**：连接真实麦克风和耳机
+- **逻辑隔离**：防止自翻译，确保只翻译对应方向的语音
 
 ### 实时处理
 - **低延迟**：端到端延迟小于800ms
@@ -82,17 +103,17 @@
 # 1. 安装依赖
 cargo build
 
-# 2. 运行完整演示
-cargo run --bin full_demo
+# 2. 运行全双工演示
+cargo run --example full_duplex_demo
 
-# 3. 运行简单演示
-cargo run --bin simple_demo
+# 3. 运行完整演示
+cargo run --example full_demo
 
-# 4. 运行集成演示
-cargo run --bin integration_demo
+# 4. 运行简单演示
+cargo run --example simple_demo
 
 # 5. 运行会议翻译器演示
-cargo run --bin conference_translator_demo
+cargo run --example conference_translator_demo
 
 # 6. 运行测试
 cargo test
@@ -125,8 +146,8 @@ cargo run
 1. 程序启动后，系统创建虚拟音频输入/输出设备
 2. 用户在会议软件中选择虚拟音频设备
 3. 设置自己的语言和对方的语言
-4. 用户说话时，声音被翻译成对方语言
-5. 对方说话时，声音被翻译成用户语言
+4. 用户说话时，声音被翻译成对方语言并通过虚拟麦克风输出
+5. 对方说话时，声音被翻译成用户语言并通过物理耳机播放
 
 ### 语言对配置
 - 支持多种语言间的互译
@@ -147,6 +168,7 @@ real_trans/
 │   ├── main.rs         # 主入口点
 │   ├── lib.rs          # 库入口点
 │   ├── audio_types.rs  # 音频类型定义
+│   ├── audio_switchboard.rs  # 音频交换机（全双工路由管理）
 │   ├── bidirectional_translator.rs  # 双向翻译器
 │   ├── virtual_audio_manager.rs     # 虚拟音频管理器
 │   ├── core/           # 核心组件
@@ -160,6 +182,7 @@ real_trans/
 │   │   └── translation_pipeline.rs # 翻译流水线
 │   ├── io/             # I/O组件
 │   │   ├── audio_device.rs  # 音频设备管理
+│   │   ├── virtual_audio_device.rs # 虚拟音频设备
 │   │   ├── audio_capture.rs # 音频捕获
 │   │   └── mod.rs           # I/O模块声明
 │   └── tests/          # 测试模块
@@ -169,7 +192,8 @@ real_trans/
 │   ├── simple_demo.rs               # 简单演示
 │   ├── integration_demo.rs          # 集成演示
 │   ├── full_demo.rs                 # 完整演示
-│   └── conference_translator_demo.rs # 会议翻译演示
+│   ├── conference_translator_demo.rs # 会议翻译演示
+│   └── full_duplex_demo.rs          # 全双工双向翻译演示
 ├── bins/               # 测试程序
 │   ├── simple_test.rs               # 简单测试
 │   ├── integration_test.rs          # 集成测试
@@ -196,6 +220,9 @@ real_trans/
 - [x] 会议翻译器演示
 - [x] 音频模拟测试框架
 - [x] 完整演示程序
+- [x] 全双工音频路由架构
+- [x] 音频交换机模块
+- [x] 双通道流水线管理
 - [ ] 真实模型集成 (进行中)
 - [ ] 性能优化
 - [ ] UI界面开发
@@ -221,17 +248,20 @@ real_trans/
 运行不同级别的演示以查看功能：
 
 ```bash
+# 运行全双工双向翻译演示
+cargo run --example full_duplex_demo
+
 # 运行简单演示
-cargo run --bin simple_demo
+cargo run --example simple_demo
 
 # 运行基础集成演示
-cargo run --bin integration_demo
+cargo run --example integration_demo
 
 # 运行完整演示
-cargo run --bin full_demo
+cargo run --example full_demo
 
 # 运行会议翻译器演示
-cargo run --bin conference_translator_demo
+cargo run --example conference_translator_demo
 ```
 
 ## 构建说明
