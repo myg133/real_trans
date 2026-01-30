@@ -8,12 +8,14 @@ pub mod core {
 
 pub use core::ring_buffer::RingBuffer;
 pub use audio_types::*;
+pub use io::physical_device::PhysicalAudioDevice;
 
 /// IO模块 - 负责音频输入输出
 pub mod io {
     pub mod audio_device;
     pub mod virtual_audio_device;
     pub mod audio_capture;
+    pub mod physical_device;
 }
 
 /// Engine模块 - 负责ASR、MT、TTS核心引擎

@@ -55,6 +55,10 @@ path = "examples/module_tests/full_integration_test.rs"
 name = "module_tests_runner"
 path = "examples/module_tests_runner.rs"
 
+[[example]]
+name = "list_audio_devices"
+path = "examples/list_audio_devices.rs"
+
 [dependencies]
 tokio = { version = "1.20", features = ["full"] }
 serde = { version = "1.0.197", features = ["derive"] }
@@ -62,6 +66,7 @@ serde_json = "1.0.117"
 anyhow = "1.0.86"
 thiserror = "1.0.58"
 lazy_static = "1.4.0"
+cpal = "0.15"
 
 [dev-dependencies]
 tokio-test = "0.4.4"
