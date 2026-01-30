@@ -119,6 +119,27 @@ cargo run --example conference_translator_demo
 cargo test
 ```
 
+### 模块化测试
+
+系统提供了分步测试功能，可按模块验证功能：
+
+```bash
+# 1. 音频输入模块测试 - 测试物理麦克风输入并将音频保存到文件
+cargo run --example input_test
+
+# 2. 音频输入+翻译模块测试 - 测试物理麦克风输入，经过翻译后保存到文件
+cargo run --example input_with_translation_test
+
+# 3. 音频输出模块测试 - 测试从文件读取音频并通过耳机播放
+cargo run --example output_test
+
+# 4. 完整集成测试 - 端到端的全双工双向翻译测试
+cargo run --example full_integration_test
+
+# 5. 运行交互式测试选择器
+cargo run --example module_tests_runner
+```
+
 ### 模型安装
 
 ```bash
