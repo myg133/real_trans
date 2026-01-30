@@ -35,6 +35,26 @@ path = "examples/conference_translator_demo.rs"
 name = "full_duplex_demo"
 path = "examples/full_duplex_demo.rs"
 
+[[example]]
+name = "input_test"
+path = "examples/module_tests/input_test.rs"
+
+[[example]]
+name = "input_with_translation_test"
+path = "examples/module_tests/input_with_translation_test.rs"
+
+[[example]]
+name = "output_test"
+path = "examples/module_tests/output_test.rs"
+
+[[example]]
+name = "full_integration_test"
+path = "examples/module_tests/full_integration_test.rs"
+
+[[example]]
+name = "module_tests_runner"
+path = "examples/module_tests_runner.rs"
+
 [dependencies]
 tokio = { version = "1.20", features = ["full"] }
 serde = { version = "1.0.197", features = ["derive"] }
