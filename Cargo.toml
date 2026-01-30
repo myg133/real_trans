@@ -15,6 +15,21 @@ path = "bins/integration_test.rs"
 name = "test_runner"
 path = "bins/test_runner.rs"
 
+[[example]]
+name = "simple_demo"
+path = "examples/simple_demo.rs"
+
+[[example]]
+name = "integration_demo"
+path = "examples/integration_demo.rs"
+
+[[example]]
+name = "full_demo"
+path = "examples/full_demo.rs"
+
+[[example]]
+name = "conference_translator_demo"
+path = "examples/conference_translator_demo.rs"
 
 [dependencies]
 tokio = { version = "1.20", features = ["full"] }

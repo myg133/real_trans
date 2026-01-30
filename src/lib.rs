@@ -12,6 +12,7 @@ pub use audio_types::*;
 /// IO模块 - 负责音频输入输出
 pub mod io {
     pub mod audio_device;
+    pub mod virtual_audio_device;
     pub mod audio_capture;
 }
 

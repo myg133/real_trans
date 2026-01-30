@@ -36,7 +36,7 @@ pub trait AudioDevice: Send + Sync {
     fn open_input_stream(
         &mut self,
         device_id: Option<String>,
-        callback: Box<dyn Fn(&[AudioSample]) + Send>,
+        callback: Box<dyn Fn(&[AudioSample]) + Send + Sync>,
     ) -> Result<(), Box<dyn std::error::Error>>;
     
     /// 关闭音频输入流
@@ -113,7 +113,7 @@ impl AudioDevice for MockAudioDevice {
     fn open_input_stream(
         &mut self,
         device_id: Option<String>,
-        _callback: Box<dyn Fn(&[AudioSample]) + Send>,
+        _callback: Box<dyn Fn(&[AudioSample]) + Send + Sync>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.input_device_id = device_id.unwrap_or_else(|| "mock_input".to_string());
         println!("Opened input stream on device: {}", self.input_device_id);

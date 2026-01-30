@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use tokio::sync::mpsc;
 use crate::io::audio_device::{AudioDevice, MockAudioDevice, AudioSample};
+use crate::io::virtual_audio_device::VirtualAudioDevice;
 use crate::bidirectional_translator::{BidirectionalTranslator, BidirectionalResult, TranslationDirection};
 
 /// 虚拟音频设备类型
@@ -25,9 +26,9 @@ pub struct VirtualAudioManager {
     /// 双向翻译器
     translator: Arc<Mutex<BidirectionalTranslator>>,
     /// 输入音频数据回调
-    input_callback: Option<Box<dyn Fn(&[AudioSample]) + Send>>,
+    input_callback: Option<Box<dyn Fn(&[AudioSample]) + Send + Sync>>,
     /// 输出音频数据回调
-    output_callback: Option<Box<dyn Fn(&[AudioSample]) + Send>>,
+    output_callback: Option<Box<dyn Fn(&[AudioSample]) + Send + Sync>>,
     /// 是否已激活
     active: bool,
 }
@@ -36,8 +37,8 @@ impl VirtualAudioManager {
     /// 创建新的虚拟音频管理器
     pub fn new(translator: Arc<Mutex<BidirectionalTranslator>>) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(VirtualAudioManager {
-            virtual_input_device: Some(Box::new(MockAudioDevice::new())),
-            virtual_output_device: Some(Box::new(MockAudioDevice::new())),
+            virtual_input_device: Some(Box::new(VirtualAudioDevice::new("virtual_input", "virtual_output", 16000, 1))),
+            virtual_output_device: Some(Box::new(VirtualAudioDevice::new("virtual_input", "virtual_output", 16000, 1))),
             device_registry: HashMap::new(),
             translator,
             input_callback: None,
@@ -61,12 +62,12 @@ impl VirtualAudioManager {
     }
 
     /// 设置输入音频回调（当用户说话时）
-    pub fn set_input_callback(&mut self, callback: Box<dyn Fn(&[AudioSample]) + Send>) {
+    pub fn set_input_callback(&mut self, callback: Box<dyn Fn(&[AudioSample]) + Send + Sync>) {
         self.input_callback = Some(callback);
     }
 
     /// 设置输出音频回调（当需要播放翻译后的音频时）
-    pub fn set_output_callback(&mut self, callback: Box<dyn Fn(&[AudioSample]) + Send>) {
+    pub fn set_output_callback(&mut self, callback: Box<dyn Fn(&[AudioSample]) + Send + Sync>) {
         self.output_callback = Some(callback);
     }
 
