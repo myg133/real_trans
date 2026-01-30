@@ -8,8 +8,7 @@ use tokio::time::{sleep, Duration};
 use real_trans::{
     io::audio_device::AudioDevice,
     io::virtual_audio_device::VirtualAudioDevice,
-    audio_types::AudioSample,
-    engine::translation_pipeline::{TranslationPipeline, TranslationCallback},
+    audio_types::{AudioSample, SAMPLE_RATE, CHANNELS},
     bidirectional_translator::{BidirectionalTranslator, BidirectionalResult, TranslationDirection}
 };
 
@@ -29,7 +28,7 @@ impl AudioRecorder {
         let mut file = File::create(filename)?;
         
         for &sample in buffer.iter() {
-            // 将i16样本写入文件（小端序）
+            // AudioSample已经是i16类型，直接写入文件（小端序）
             file.write_all(&sample.to_le_bytes())?;
         }
         
@@ -63,12 +62,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     translator.start()?;
 
     // 创建虚拟音频设备（在实际实现中，这里会连接到真实的物理麦克风）
-    let mut audio_device = VirtualAudioDevice::new();
+    let mut audio_device = VirtualAudioDevice::new("default_input", "default_output", SAMPLE_RATE, CHANNELS);
     
     // 设置音频输入回调
     let recorder_clone = Arc::clone(&recorder);
     audio_device.open_input_stream(
-        Some("physical_mic".to_string()),
+        None,  // 使用默认设备
         Box::new(move |audio_data| {
             println!("Captured {} samples", audio_data.len());
             // 在实际实现中，这里会将音频数据传递给翻译器
@@ -85,7 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 模拟一些音频输入和翻译
     println!("模拟音频输入和翻译过程...");
     for i in 0..5 {
-        let sample_audio: Vec<AudioSample> = vec![100, 200, 300, 400, 500]; // 模拟音频数据
+        let sample_audio: Vec<AudioSample> = vec![3277, 6554, 9830, 13107, 16384]; // 模拟音频数据 (约为最大值的 10%, 20%, 30%, 40%, 50%)
         translator.handle_outbound_audio(&sample_audio).await;
         sleep(Duration::from_millis(500)).await;
     }
@@ -98,9 +97,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 保存模拟的翻译后音频到文件
     // 在实际实现中，这里会保存TTS生成的音频
     let sample_translated_audio: Vec<AudioSample> = vec![
-        500, 400, 300, 200, 100,  // 模拟翻译后的音频数据
-        100, 200, 300, 400, 500,
-        500, 400, 300, 200, 100,
+        16384, 13107, 9830, 6554, 3277,  // 模拟翻译后的音频数据 (约为最大值的 50%, 40%, 30%, 20%, 10%)
+        3277, 6554, 9830, 13107, 16384,
+        16384, 13107, 9830, 6554, 3277,
     ];
     
     {

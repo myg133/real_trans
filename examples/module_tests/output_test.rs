@@ -6,16 +6,16 @@ use std::io::Read;
 use std::sync::{Arc, Mutex};
 use real_trans::io::audio_device::AudioDevice;
 use real_trans::io::virtual_audio_device::VirtualAudioDevice;
-use real_trans::audio_types::AudioSample;
+use real_trans::audio_types::{AudioSample, SAMPLE_RATE, CHANNELS};
 
 struct AudioPlayer {
-    audio_device: Option<Box<dyn AudioDevice>>,
+    audio_device: Option<VirtualAudioDevice>,
 }
 
 impl AudioPlayer {
     fn new() -> Result<Self, Box<dyn std::error::Error>> {
         Ok(AudioPlayer {
-            audio_device: Some(Box::new(VirtualAudioDevice::new())),
+            audio_device: Some(VirtualAudioDevice::new("default_input", "default_output", SAMPLE_RATE, CHANNELS)),
         })
     }
 
@@ -28,8 +28,7 @@ impl AudioPlayer {
         let mut samples = Vec::new();
         for chunk in buffer.chunks_exact(2) {
             let sample = i16::from_le_bytes([chunk[0], chunk[1]]);
-            // 将i16转换为AudioSample(f32)
-            samples.push(sample as AudioSample / i16::MAX as AudioSample);
+            samples.push(sample);
         }
         
         println!("Loaded {} samples from {}", samples.len(), filename);
@@ -39,7 +38,7 @@ impl AudioPlayer {
     fn play_audio(&mut self, audio_data: &[AudioSample]) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(ref mut device) = self.audio_device {
             // 打开输出流并播放音频
-            device.open_output_stream(Some("physical_headphones".to_string()))?;
+            device.open_output_stream(Some("default_output".to_string()))?;
             let played = device.play_audio(audio_data)?;
             println!("Played {} samples", played);
             device.close_output_stream()?;
@@ -62,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         AudioPlayer::load_from_file(&AudioPlayer::new()?, "translated_output.raw")?
     } else {
         println!("使用默认测试音频数据");
-        vec![100, 200, 300, 400, 500, 400, 300, 200, 100] // 简单的波形
+        vec![3277, 6554, 9830, 13107, 16384, 13107, 9830, 6554, 3277] // 简单的波形 (约为最大值的 10%, 20%, 30%, 40%, 50%, 40%, 30%, 20%, 10%)
     };
 
     // 创建音频播放器
@@ -72,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     player.play_audio(&audio_data)?;
     
     println!("音频输出测试完成！");
-    println!("音频已通过模拟耳机播放");
+    println!("音频已通过虚拟耳机播放（在实际环境中将通过物理设备播放）");
 
     Ok(())
 }

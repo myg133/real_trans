@@ -1,79 +1,122 @@
 # 故障排除指南
 
-## 常见问题及解决方案
+## 常见问题
 
-### 1. 依赖版本冲突问题
+### 1. 编译错误
 
-**问题描述：**
-```
-error: failed to select a version for the requirement `cc = "^1"` (locked to 1.2.55)
-candidate versions found which didn't match: 1.2.54, 1.2.53, 1.2.52, ...
-location searched: `ustc` index (which is replacing registry `crates-io`)
-```
+**问题**: `error[E0277]: cannot multiply i16 by f32`
+**解决方案**: 确保在处理AudioSample时使用正确的类型。AudioSample是i16类型，不需要转换为f32再乘以i16::MAX。
 
-**原因：**
-此问题是由于使用了USTC（中国科学技术大学）的Rust镜像源，该镜像源与官方源存在版本同步延迟，导致依赖版本不一致。
-
-**解决方案：**
-
-1. **检查是否有镜像源配置：**
-   ```bash
-   # 检查项目中是否有 .cargo/config.toml 文件
-   ls .cargo/config.toml
-   
-   # 检查用户级别的配置
-   ls ~/.cargo/config
-   ```
-
-2. **删除或修改镜像源配置：**
-   如果发现 `.cargo/config.toml` 文件，请删除或编辑它：
-   ```bash
-   # 删除项目级配置
-   rm -rf .cargo
-   ```
-
-3. **清理并重建：**
-   ```bash
-   cargo clean
-   rm -f Cargo.lock
-   cargo build
-   ```
-
-4. **如果仍存在问题，尝试使用环境变量强制使用官方源：**
-   ```bash
-   cargo build --offline  # 如果依赖已下载
-   # 或者
-   CARGO_NET_GIT_FETCH_WITH_CLI=true cargo build
-   ```
-
-### 2. 音频设备相关问题
-
-**问题描述：**
-在某些环境下（如云开发环境、容器）无法检测到音频设备。
-
-**解决方案：**
-- 此程序设计用于有真实音频硬件的计算机
-- 在服务器或云环境中，音频设备检测功能会显示"未找到任何设备"，这是正常现象
-- 请在具有实际音频设备的机器上运行程序
-
-### 3. 编译警告
-
-本项目存在一些无害的编译警告（未使用的导入、变量等），这些不影响程序功能。如需消除警告，可运行：
+**问题**: `unused import` 警告
+**解决方案**: 这些是警告而非错误，不影响编译。可以通过运行 `cargo fix` 来自动修复：
 ```bash
-cargo fix --lib
+cargo fix
 ```
 
-### 4. 运行时权限问题
+### 2. 运行时问题
 
-在某些系统上，访问音频设备可能需要特殊权限：
-- **Linux**: 可能需要将用户添加到 `audio` 组
-- **Windows**: 确保应用程序有麦克风和音频访问权限
-- **MacOS**: 在系统偏好设置中授予终端或IDE麦克风访问权限
+**问题**: 程序启动后立即退出
+**解决方案**: 检查示例程序是否正确设置了音频输入回调，并且是否有持续的音频流输入。
 
-### 5. 虚拟音频设备配置
+**问题**: 虚拟音频设备无法创建
+**解决方案**: 
+- 检查系统是否支持虚拟音频设备
+- 确保有足够的权限访问音频设备
+- 检查是否有其他程序占用了音频设备
 
-如需在会议软件中使用此翻译系统，请参考 [AUDIO_DEVICE_GUIDE.md](AUDIO_DEVICE_GUIDE.md) 中的详细配置指南。
+### 3. 音频相关问题
 
----
+**问题**: 无法检测到音频设备
+**解决方案**: 
+- 确保系统中有可用的音频输入/输出设备
+- 检查音频驱动程序是否正常工作
+- 运行 `cargo run --example list_audio_devices` 查看可用设备
 
-**注意：** 如果遇到其他问题，请查看相关错误信息并参考 Rust 和 cpal 音频库的官方文档。
+**问题**: 音频延迟过高
+**解决方案**: 
+- 调整 `FRAME_SIZE_MS` 参数以减少延迟
+- 检查系统负载是否过高
+- 确保音频缓冲区大小合适
+
+### 4. 翻译相关问题
+
+**问题**: 模型文件缺失
+**解决方案**: 
+- 确保模型文件位于 `./models/` 目录下
+- 下载所需的 ASR、MT 和 TTS 模型文件
+- 检查模型文件名是否与代码中指定的一致
+
+**问题**: 翻译质量差
+**解决方案**: 
+- 尝试不同的模型文件
+- 检查输入音频质量
+- 调整翻译管道参数
+
+## 调试技巧
+
+### 1. 启用详细日志
+在运行程序时启用详细日志输出：
+```bash
+RUST_LOG=debug cargo run --example simple_demo
+```
+
+### 2. 检查音频流
+使用音频测试示例来验证音频流：
+```bash
+cargo run --example module_tests/input_test
+cargo run --example module_tests/output_test
+```
+
+### 3. 验证翻译功能
+单独测试翻译管道：
+```bash
+cargo run --example module_tests/input_with_translation_test
+```
+
+## 平台特定问题
+
+### Linux
+- 确保安装了 ALSA 开发库：`sudo apt-get install libasound2-dev`
+- 检查 PulseAudio 是否正在运行
+
+### Windows
+- 确保安装了 Windows SDK
+- 检查 WASAPI 或 DirectSound 驱动程序状态
+
+### macOS
+- 确保授予音频访问权限
+- 检查 Core Audio 框架是否可用
+
+## 性能优化
+
+### 1. 内存使用
+- 调整缓冲区大小以平衡内存使用和性能
+- 监控音频缓冲区避免溢出
+
+### 2. CPU 使用率
+- 优化翻译管道的并发处理
+- 使用适当的采样率和位深度
+
+### 3. 延迟优化
+- 减少音频帧大小
+- 优化模型推理速度
+
+## 模型文件要求
+
+确保以下模型文件存在于 `./models/` 目录：
+- `whisper-tiny.bin` - ASR 模型
+- `qwen2.5-0.5b.bin` - MT 模型
+- 其他必要的 TTS 模型文件
+
+## 环境变量
+
+- `RUST_LOG` - 控制日志级别 (trace, debug, info, warn, error)
+- `AUDIO_SAMPLE_RATE` - 覆盖默认采样率 (如果支持)
+- `TRANSLATION_LANGUAGES` - 指定翻译语言对
+
+## 联系支持
+
+如果遇到无法解决的问题，请：
+1. 检查 GitHub Issues 是否已有类似问题
+2. 提交新的 Issue，包含详细的错误信息和环境描述
+3. 提供重现问题的最小示例代码

@@ -8,7 +8,7 @@ use tokio::time::{sleep, Duration};
 use real_trans::{
     io::audio_device::AudioDevice,
     io::virtual_audio_device::VirtualAudioDevice,
-    audio_types::AudioSample,
+    audio_types::{AudioSample, SAMPLE_RATE, CHANNELS},
     bidirectional_translator::{BidirectionalTranslator, BidirectionalResult, TranslationDirection}
 };
 
@@ -35,7 +35,7 @@ impl AudioProcessor {
         let mut file = File::create(filename)?;
         
         for &sample in buffer.iter() {
-            // 将i16样本写入文件（小端序）
+            // AudioSample已经是i16类型，直接写入文件（小端序）
             file.write_all(&sample.to_le_bytes())?;
         }
         
@@ -48,7 +48,7 @@ impl AudioProcessor {
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer)?;
         
-        // 将字节转换为i16样本（假设小端序）
+        // 将字节转换为i16样本（假设小端序），然后转换为f32
         let mut samples = Vec::new();
         for chunk in buffer.chunks_exact(2) {
             let sample = i16::from_le_bytes([chunk[0], chunk[1]]);
@@ -83,9 +83,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     translator.start()?;
 
     // 创建虚拟音频设备（在实际实现中，这里会连接到真实的物理设备）
-    let mut input_device = VirtualAudioDevice::new();
+    let mut input_device = VirtualAudioDevice::new("default_input", "default_output", SAMPLE_RATE, CHANNELS);
     input_device.open_input_stream(
-        Some("physical_mic".to_string()),
+        Some("default_input".to_string()),
         Box::new({
             let processor = Arc::clone(&processor);
             move |audio_data| {
@@ -100,20 +100,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     input_device.start_recording()?;
 
     // 创建虚拟音频输出设备
-    let mut output_device = VirtualAudioDevice::new();
-    output_device.open_output_stream(Some("physical_headphones".to_string()))?;
+    let mut output_device = VirtualAudioDevice::new("default_input", "default_output", SAMPLE_RATE, CHANNELS);
+    output_device.open_output_stream(Some("default_output".to_string()))?;
 
     println!("开始端到端测试...");
     
     // 模拟用户说话（输入中文，期望输出英文）
     println!("\n--- 模拟用户说中文 ---");
-    let chinese_audio: Vec<AudioSample> = vec![100, 200, 300, 400, 500, 400, 300, 200, 100];
+    let chinese_audio: Vec<AudioSample> = vec![3277, 6554, 9830, 13107, 16384, 13107, 9830, 6554, 3277]; // 模拟音频数据
     translator.handle_outbound_audio(&chinese_audio).await;
     sleep(Duration::from_millis(100)).await;
     
     // 模拟对方说话（输入英文，期望输出中文）
     println!("\n--- 模拟对方说英文 ---");
-    let english_audio: Vec<AudioSample> = vec![500, 400, 300, 200, 100, 200, 300, 400, 500];
+    let english_audio: Vec<AudioSample> = vec![16384, 13107, 9830, 6554, 3277, 6554, 9830, 13107, 16384]; // 模拟音频数据
     translator.handle_inbound_audio(&english_audio).await;
     sleep(Duration::from_millis(100)).await;
 
