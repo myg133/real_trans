@@ -155,6 +155,10 @@ cargo run --example module_tests_runner
 
 如果遇到构建或运行问题，请参考 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) 获取解决方案，特别是依赖版本冲突和音频设备访问等问题的处理方法。
 
+### 运行环境说明
+
+**重要**：音频功能需要在具有实际音频硬件的计算机上运行才能正常工作。在云端开发环境（如Codespaces、Docker容器等）中，音频设备测试可能会失败或返回空数据，这是正常现象。详情请参阅 [ENVIRONMENT_NOTES.md](ENVIRONMENT_NOTES.md)。
+
 ### 模型安装
 
 ```bash
