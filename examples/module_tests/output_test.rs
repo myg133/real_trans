@@ -4,7 +4,9 @@
 use std::fs::File;
 use std::io::Read;
 use std::sync::{Arc, Mutex};
-use real_trans::io::audio_device::{AudioDevice, VirtualAudioDevice, AudioSample};
+use real_trans::io::audio_device::AudioDevice;
+use real_trans::io::virtual_audio_device::VirtualAudioDevice;
+use real_trans::audio_types::AudioSample;
 
 struct AudioPlayer {
     audio_device: Option<Box<dyn AudioDevice>>,
@@ -26,7 +28,8 @@ impl AudioPlayer {
         let mut samples = Vec::new();
         for chunk in buffer.chunks_exact(2) {
             let sample = i16::from_le_bytes([chunk[0], chunk[1]]);
-            samples.push(sample);
+            // 将i16转换为AudioSample(f32)
+            samples.push(sample as AudioSample / i16::MAX as AudioSample);
         }
         
         println!("Loaded {} samples from {}", samples.len(), filename);

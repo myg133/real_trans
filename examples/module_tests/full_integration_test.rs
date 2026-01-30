@@ -6,7 +6,9 @@ use std::io::{Read, Write};
 use std::sync::{Arc, Mutex};
 use tokio::time::{sleep, Duration};
 use real_trans::{
-    io::audio_device::{AudioDevice, VirtualAudioDevice, AudioSample},
+    io::audio_device::AudioDevice,
+    io::virtual_audio_device::VirtualAudioDevice,
+    audio_types::AudioSample,
     bidirectional_translator::{BidirectionalTranslator, BidirectionalResult, TranslationDirection}
 };
 
@@ -32,7 +34,7 @@ impl AudioProcessor {
         
         let mut file = File::create(filename)?;
         
-        for sample in buffer.iter() {
+        for &sample in buffer.iter() {
             // 将i16样本写入文件（小端序）
             file.write_all(&sample.to_le_bytes())?;
         }
@@ -50,7 +52,8 @@ impl AudioProcessor {
         let mut samples = Vec::new();
         for chunk in buffer.chunks_exact(2) {
             let sample = i16::from_le_bytes([chunk[0], chunk[1]]);
-            samples.push(sample);
+            // 将i16转换为AudioSample(f32)
+            samples.push(sample as AudioSample / i16::MAX as AudioSample);
         }
         
         println!("Loaded {} samples from {}", samples.len(), filename);

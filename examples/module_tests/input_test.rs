@@ -4,7 +4,8 @@
 use std::fs::File;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
-use real_trans::io::audio_device::{AudioDevice, VirtualAudioDevice};
+use real_trans::io::audio_device::AudioDevice;
+use real_trans::io::virtual_audio_device::VirtualAudioDevice;
 use real_trans::audio_types::AudioSample;
 
 struct AudioRecorder {
@@ -28,7 +29,7 @@ impl AudioRecorder {
         let buffer = self.buffer.lock().unwrap();
         let mut file = File::create(filename)?;
         
-        for sample in buffer.iter() {
+        for &sample in buffer.iter() {
             // 将f32样本转换为i16并写入文件（小端序）
             let sample_i16 = (sample * i16::MAX as f32) as i16;
             file.write_all(&sample_i16.to_le_bytes())?;

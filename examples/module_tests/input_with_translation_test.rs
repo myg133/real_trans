@@ -6,7 +6,9 @@ use std::io::Write;
 use std::sync::{Arc, Mutex};
 use tokio::time::{sleep, Duration};
 use real_trans::{
-    io::audio_device::{AudioDevice, VirtualAudioDevice, AudioSample},
+    io::audio_device::AudioDevice,
+    io::virtual_audio_device::VirtualAudioDevice,
+    audio_types::AudioSample,
     engine::translation_pipeline::{TranslationPipeline, TranslationCallback},
     bidirectional_translator::{BidirectionalTranslator, BidirectionalResult, TranslationDirection}
 };
@@ -26,7 +28,7 @@ impl AudioRecorder {
         let buffer = self.buffer.lock().unwrap();
         let mut file = File::create(filename)?;
         
-        for sample in buffer.iter() {
+        for &sample in buffer.iter() {
             // 将i16样本写入文件（小端序）
             file.write_all(&sample.to_le_bytes())?;
         }
