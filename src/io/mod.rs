@@ -4,7 +4,6 @@
 pub mod audio_device;
 pub mod virtual_audio_device;
 pub mod audio_capture;
-pub mod physical_device;
 
 pub use audio_device::*;
 pub use virtual_audio_device::*;
